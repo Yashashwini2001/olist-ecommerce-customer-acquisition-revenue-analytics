@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+.env
+.env.*
+*.env
+
+# Jupyter
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+*.ipynb
+
+# SQL
+*.sql~
+*.sql.bak
+*.sql.tmp
+*.sql.swp
+*.sql.swo
+
+# Excel
+~$*.xls*
+*.xlsx~
+*.xlsm~
+*.xlsb~
+
+# Markdown Temporary Files
+*.md~
+*.md.tmp
+*.md.bak
+*.md.swp
+*.md.swo
+
+# Logs
+*.log
+logs/
+Logs/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE / Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+*.bak
+*~
+
+# Project Temporary / Backup Files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old

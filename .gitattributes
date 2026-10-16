@@ -1,0 +1,13 @@
+# Default text handling
+* text=auto
+
+# Keep project code and SQL normalized to LF
+*.py text eol=lf
+*.sql text eol=lf
+*.md text eol=lf
+*.ipynb text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Preserve raw CSV bytes and source line endings exactly
+Raw_Data/*.csv binary

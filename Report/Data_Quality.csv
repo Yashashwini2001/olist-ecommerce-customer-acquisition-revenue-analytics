@@ -1,0 +1,7 @@
+check_name,issue_count
+"Missing customer IDs",0
+"Missing seller IDs",0
+"Missing order IDs",0
+"Duplicate review ID groups",789
+"Order items without matching orders",0
+"Closed deals without transactional seller match",462

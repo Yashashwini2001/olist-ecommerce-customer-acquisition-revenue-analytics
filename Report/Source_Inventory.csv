@@ -1,0 +1,12 @@
+dataset,rows_count
+Customers,99441
+Sellers,3095
+"Product category translations",71
+Products,32951
+Orders,99441
+"Order items",112650
+Payments,103886
+Reviews,99224
+Geolocation,1000163
+"Marketing qualified leads",8000
+"Closed deals",842

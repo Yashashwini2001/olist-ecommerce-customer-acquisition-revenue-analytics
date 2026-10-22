@@ -1,0 +1,12 @@
+Source,Table,File,Exists,Size_MB,Encoding_Valid,Delimiter,Delimiter_Match,Line_Ending,Rows,Expected_Rows,Row_Count_Match,Columns,Expected_Columns,Missing,Unexpected,Schema_Match,Duplicate_Headers,CSV_Readable,Parser_Error,Status
+E-Commerce,raw_customers,olist_customers_dataset.csv,True,8.62,True,",",True,LF,99441,99441,True,5,5,,,True,0,True,,PASS
+E-Commerce,raw_geolocation,olist_geolocation_dataset.csv,True,58.44,True,",",True,LF,1000163,1000163,True,5,5,,,True,0,True,,PASS
+E-Commerce,raw_orders,olist_orders_dataset.csv,True,16.84,True,",",True,LF,99441,99441,True,8,8,,,True,0,True,,PASS
+E-Commerce,raw_order_items,olist_order_items_dataset.csv,True,14.72,True,",",True,LF,112650,112650,True,7,7,,,True,0,True,,PASS
+E-Commerce,raw_order_payments,olist_order_payments_dataset.csv,True,5.51,True,",",True,LF,103886,103886,True,5,5,,,True,0,True,,PASS
+E-Commerce,raw_order_reviews,olist_order_reviews_dataset.csv,True,13.78,True,",",True,CRLF,99224,99224,True,7,7,,,True,0,True,,PASS
+E-Commerce,raw_products,olist_products_dataset.csv,True,2.27,True,",",True,LF,32951,32951,True,9,9,,,True,0,True,,PASS
+E-Commerce,raw_sellers,olist_sellers_dataset.csv,True,0.17,True,",",True,LF,3095,3095,True,4,4,,,True,0,True,,PASS
+E-Commerce,raw_product_category_translation,product_category_name_translation.csv,True,0.0,True,",",True,CRLF,71,71,True,2,2,,,True,0,True,,PASS
+Marketing Funnel,raw_marketing_qualified_leads,olist_marketing_qualified_leads_dataset.csv,True,0.67,True,",",True,LF,8000,8000,True,4,4,,,True,0,True,,PASS
+Marketing Funnel,raw_closed_deals,olist_closed_deals_dataset.csv,True,0.16,True,",",True,LF,842,842,True,14,14,,,True,0,True,,PASS

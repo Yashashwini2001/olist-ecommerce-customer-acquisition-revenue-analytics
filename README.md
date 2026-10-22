@@ -1,97 +1,100 @@
 # Olist E-Commerce Customer Acquisition and Revenue Analytics
 
-**Python · Pandas · SQL · MySQL · Excel · ELT**
+**Tools:** Python, Pandas, MySQL, SQL, Excel
 
-This project connects Olist's marketing acquisition funnel with downstream marketplace activity. The goal is to understand how many marketing-qualified leads become closed deals, whether acquired sellers can be found in transaction records, and how marketplace performance can be monitored with clear, repeatable KPIs.
+## What this project looks at
 
-## The business question
+Olist is a Brazilian online marketplace. This project uses two related datasets: one about businesses that showed interest in selling through Olist, and another about activity on the marketplace.
 
-**Do sellers acquired through the marketing funnel show up in marketplace transaction data, and what should the business investigate when they do not?**
+The main question is:
 
-A seller not appearing in transaction records is a reconciliation gap to investigate—not automatic proof that marketing attribution is wrong. Timing, seller activation, identifier mapping, and the analysis window can all affect the result.
+**Of the sellers who reached the “closed deal” stage in the marketing data, how many can we find in the marketplace transaction data?**
 
-## Key findings
+A closed deal does not automatically mean that a seller has started selling. A seller may need time to activate, the seller IDs may not match, or the seller may not have an order in the period covered by the data. Any missing match needs to be checked before drawing conclusions.
 
-- The source inventory covers **11 CSV tables** and approximately **1.46 million source rows** in total.
-- The marketing funnel dataset contains **8,000 marketing-qualified leads** and **842 closed deals**. The simple closed-deal-to-lead ratio is approximately **10.5%**; validate the funnel join logic before interpreting this as a formal conversion rate.
-- The reported reconciliation found **462 of 842 closed deals (about 55%)** without a matching seller in transactional data. This is the central investigation opportunity in the project.
-- The geolocation source contains **1,000,163 rows**, so row-count reconciliation and careful handling of long-running SQL statements matter.
-- A previous `order_reviews` load silently missed one row because of CSV escape-character interpretation. The loading configuration was corrected and the expected **99,224 rows** were verified.
-- Project documentation reports zero required-key failures, zero referential-integrity failures, and zero source row-count mismatches in the documented validation run. It also flags 814 duplicate review IDs and 13 category translations that need interpretation rather than automatic deletion.
+## Main numbers
 
-## Project workflow
+- **8,000** marketing-qualified leads
+- **842** closed deals
+- **10.53%** closed-deal-to-lead ratio (842 divided by 8,000)
+- **462** closed deals without a matching seller in the transaction data
+- **54.87%** of closed deals had no transaction match (462 divided by 842)
+- **11** source tables, with about **1.56 million rows** in total
+- **1,000,163** rows in the geolocation file
 
-1. **Python / Pandas** — check source file availability, readability, headers, expected columns, row counts, and basic CSV integrity.
-2. **MySQL raw layer** — load source files without business transformations.
-3. **SQL profiling and validation** — inspect nulls, duplicates, keys, row counts, and relationships.
-4. **Staging and cleaning** — standardise fields for analysis while preserving the raw layer.
-5. **Business analysis** — query the acquisition funnel, seller matches, monthly orders, item GMV, delivery status, and review scores.
-6. **Reporting** — use the Excel workbook and slide deck to communicate findings, caveats, and actions.
+These counts describe the supplied files and the recorded analysis. The 10.53% figure is a simple ratio, not proof that every lead and deal belongs to the same acquisition period. The 462 unmatched deals are a follow-up list, not proof that marketing attribution is wrong.
 
-## Repository structure
+## What I did
+
+1. Used Python and Pandas to check that the CSV files were present, readable, and had the expected columns and row counts.
+2. Loaded the source data into MySQL.
+3. Used SQL to check row counts, required IDs, duplicates, missing values, and links between tables.
+4. Created staging tables and cleaned fields for analysis while keeping the raw tables available.
+5. Queried the marketing funnel and compared closed deals with seller and transaction data.
+6. Prepared an Excel workbook and presentation to share the results and suggested next steps.
+
+## Data quality checks
+
+The recorded validation run reported:
+
+- No required-key failures
+- No referential-integrity failures
+- No source row-count mismatches
+- 814 repeated review IDs that need interpretation
+- 13 product categories without a matching English category translation
+
+The review file originally loaded one row short in MySQL. The CSV loading settings were changed, and the load was checked again against the expected **99,224 rows**.
+
+## Files in this project
 
 ```text
-.
-├── Raw_Data/                 # Source CSV files
-├── Reference_Data/            # Ingestion summary and expected counts
-├── Notebooks/                 # Python source validation notebook
-├── SQL/                       # Database setup, load, cleaning, checks, analysis
-├── Excel/
-│   └── Olist_Executive_Reporting.xlsx
-├── Presentation/
-│   └── Olist_Customer_Acquisition_Analytics.pptx
-└── README.md
+Raw_Data/          Original CSV files
+Reference_Data/    Source row-count summary
+Notebooks/         Python checks for source files
+SQL/               MySQL setup, loading, validation, cleaning, and analysis
+Docs/              Project notes and business recommendations
+Excel/             Executive reporting workbook
+Presentation/      Project slide deck
+Reports/           Executive summary PDF
+README.md          Project overview and run steps
 ```
 
-## How to run
+## How to run the project
 
-1. Download the two public Olist datasets from Kaggle and place all CSV files in `Raw_Data/`.
-2. Open `Notebooks/01_Raw_Data_Ingestion.ipynb` and run the notebook to validate source files.
-3. Open MySQL Workbench and execute the SQL scripts in numerical order. Review each script's comments and confirm the database path before loading.
-4. Run the data-quality checks before business analysis.
-5. Execute `SQL/11_Business_Analysis.sql` and use the query results to populate the monthly trend template in the Excel workbook.
-6. Review the executive workbook and presentation. Replace any illustrative/template sections with the latest output from your own database run.
+1. Install Python with Pandas and Jupyter Notebook, plus MySQL 8 and MySQL Workbench.
+2. Keep the supplied CSV files in the `Raw_Data` folder. If you download the data separately, use the original Olist e-commerce and marketing-funnel files.
+3. Open `Notebooks/01_Raw_Data_Ingestion.ipynb` and run the checks.
+4. Open the SQL files in MySQL Workbench and run them in numerical order. Check the file paths in the load script before running it.
+5. Run the validation scripts and review any warnings before using the analysis queries.
+6. Run `SQL/11_Business_Analysis.sql` for the business queries.
+7. Use the query results to update the Excel workbook and presentation when you rerun the project.
 
-### Geolocation load troubleshooting
+The files in this repository include a recorded set of results. If you rerun the analysis, your results may differ if you change the source files, filters, or query logic.
 
-The geolocation CSV has 1,000,163 rows. A single large `INSERT ... SELECT` can exceed a client read timeout or expose server resource limits. If Error 2013 occurs, increase the Workbench DBMS read timeout, confirm whether the server query is still running before retrying, and use a repeatable batch strategy if needed. After loading, compare staging and cleaned row counts. Avoid rerunning a batch that has already committed.
+## Business next steps
 
-## Main business recommendations
+1. Review the 462 closed deals without a transaction match.
+2. Check seller IDs, deal dates, and the first transaction date before assigning a reason.
+3. Agree on what counts as an activated seller. For example, a team could track whether a seller has a valid order within 30, 60, or 90 days of deal closure.
+4. Report monthly orders, item GMV, average order value, freight, and review scores using the same definitions each month.
+5. Keep the row-count and data-quality checks in place whenever the files are loaded again.
 
-1. Build a weekly report for the 462 closed deals without a transaction match. Assign each case a reason such as activation pending, seller-ID mismatch, no order in the observation window, or unresolved.
-2. Define seller activation as a measurable event—for example, the first valid order within a chosen number of days after deal closure—and report 30/60/90-day cohorts.
-3. Maintain a documented seller-ID crosswalk between CRM/marketing and marketplace tables. Do not silently use fuzzy matching.
-4. Track monthly delivered orders, item GMV, average order value, freight value, and review scores together. Item GMV is not profit and excludes freight.
-5. Keep ingestion gates: expected row counts, load warnings, required keys, duplicate checks, and referential-integrity checks should be reviewed after reloads.
+## Important definitions
 
-## KPI definitions
+- **Lead-to-deal ratio:** number of closed deals divided by the number of marketing-qualified leads.
+- **Transaction match:** a closed deal whose seller can be matched to a seller in the marketplace transaction data.
+- **Unmatched-deal share:** closed deals without a transaction match divided by all closed deals.
+- **Item GMV:** the sum of item prices for the orders included in the query. It excludes freight and is not profit.
+- **Average order value (AOV):** item GMV divided by the number of distinct orders, unless the report states another definition.
 
-| KPI | Definition | Important note |
-| --- | --- | --- |
-| Lead-to-deal ratio | Distinct closed deals / distinct marketing-qualified leads | Interpret only after confirming the join and cohort logic |
-| Transaction-match rate | Closed deals with a seller found in transaction records / closed deals | Requires consistent seller IDs and a defined observation window |
-| Unmatched-deal share | Closed deals without a transaction match / all closed deals | A diagnostic measure, not a direct measure of marketing failure |
-| Item GMV | Sum of item prices for included orders | Excludes freight and is not profit |
-| Average order value (AOV) | Item GMV / distinct orders | State clearly whether freight is included |
-| Delivery performance | Order counts by status and defined delivery-time measures | Do not mix cancelled, unavailable, and delivered orders without clear definitions |
+## Data source and limitations
 
-## Tools
+- The project uses public Olist Brazilian e-commerce and marketing-funnel datasets distributed through Kaggle. The data describes historical activity, not current marketplace performance.
 
-- Python and Pandas
-- Jupyter Notebook
-- MySQL 8 and SQL
-- Microsoft Excel
-- Git and GitHub
+- A missing seller match does not by itself show why the match is missing. The project does not claim that marketing caused or failed to cause marketplace revenue. Profit also cannot be calculated from item prices alone because relevant costs and other adjustments are not included.
 
-## Data and limitations
 
-The project uses public, anonymised Olist Brazilian e-commerce and marketing-funnel datasets. Results describe the supplied historical dataset and should not be presented as current marketplace performance. Missing transaction matches do not establish causation or prove incorrect attribution. Business recommendations are proposed actions to test, not guaranteed outcomes.
+## Source links
 
-## Portfolio / resume summary
-
-Built a layered MySQL ELT workflow across 11 source tables and approximately 1.46 million records, adding checks for schema conformity, row counts, duplicates, nulls, and referential integrity. Diagnosed a silent CSV-loading truncation caused by MySQL escape-character handling. Reconciled marketing closed deals against seller transaction records and identified 462 of 842 deals without a transactional match, creating a clear follow-up investigation for marketing operations and seller activation.
-
-## Attribution
-
-- Olist Brazilian E-Commerce dataset and Olist Marketing Funnel dataset, publicly distributed through Kaggle.
-- Repository: <https://github.com/Yashashwini2001/olist-ecommerce-customer-acquisition-revenue-analytics>
+- Olist datasets: <https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce>
+- Olist marketing funnel dataset: <https://www.kaggle.com/datasets/olistbr/marketing-funnel-olist>

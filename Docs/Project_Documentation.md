@@ -1,326 +1,145 @@
-# Project Documentation — Olist Customer Acquisition & Revenue Analytics
+# Project: Olist Customer Acquisition and Revenue Analytics
 
-This document outlines the business context, data architecture, analytical workflow, data quality controls, validation results, and current project status.
+## 1. What is this project about?
 
----
+Olist is a Brazilian online marketplace. This project combines marketing-funnel data with marketplace data to answer one practical question:
 
-## 1. Business Context
+**Can we find the sellers listed as closed deals in the marketing data in the marketplace transaction data?**
 
-Olist, a Brazilian e-commerce marketplace, acquires sellers through a marketing funnel. This project aims to connect seller acquisition with downstream marketplace activity to determine if acquired sellers create meaningful business value.
+A seller may close a deal before starting to sell. There may also be a delay before the first order, or the seller ID may be recorded differently between systems. A missing match needs checking; it does not automatically mean that marketing attribution is wrong.
 
-### Business Question
+## 2. Questions covered
 
-Do sellers acquired through the marketing funnel contribute meaningful downstream marketplace value?
+- How many marketing-qualified leads are in the source file?
+- How many leads are recorded as closed deals?
+- What is the closed-deal-to-lead ratio?
+- How many closed deals have no matching seller in transaction data?
+- What data checks are needed before using the results?
+- What should the business investigate next?
 
-### Seller Value Journey
+## 3. Source data
 
-```mermaid
-flowchart LR
-    A[Seller Acquisition] --> B[Marketplace Activity]
-    B --> C[Orders]
-    C --> D[Revenue]
-    D --> E[Delivery]
-    E --> F[Customer Reviews]
-```
+The project uses 11 CSV tables.
 
----
+| Table | Rows in the recorded source inventory | Contents |
+| --- | ---: | --- |
+| Customers | 99,441 | Customer records |
+| Sellers | 3,095 | Seller records |
+| Product categories | 71 | Category names and translations |
+| Products | 32,951 | Product details |
+| Orders | 99,441 | Order-level information |
+| Order items | 112,650 | Items included in orders |
+| Payments | 103,886 | Payment records |
+| Reviews | 99,224 | Customer reviews |
+| Geolocation | 1,000,163 | ZIP-code and location information |
+| Marketing-qualified leads | 8,000 | Leads that reached the qualified stage |
+| Closed deals | 842 | Leads recorded as closed deals |
 
-## 2. Business Objectives
+The total is about 1.56 million rows across the 11 files. Because these files contain different types of records, the total is not a count of unique people, orders, or sellers.
 
-- Measure seller acquisition and conversion.
-- Connect acquired sellers with marketplace activity.
-- Measure seller orders and revenue contribution.
-- Evaluate delivery performance and customer satisfaction.
-- Identify high-value and underperforming sellers.
-- Translate findings into business recommendations.
+## 4. Tools
 
----
+- **Python and Pandas:** check that files can be read and have the expected columns and row counts.
+- **MySQL:** store the source tables and prepare data for analysis.
+- **SQL:** check data quality, clean staging tables, and calculate the main figures.
+- **Excel:** show the results in a summary workbook.
+- **PowerPoint:** explain the question, findings, and next steps.
 
-## 3. Data Sources
-
-| Dataset                   | Source           | Rows | Grain           |
-| ------------------------- | ---------------- | ----: | --------------- |
-| Customers                 | E-Commerce       | 99,441 | Customer        |
-| Sellers                   | E-Commerce       |  3,095 | Seller          |
-| Product Categories        | E-Commerce       |     71 | Category        |
-| Products                  | E-Commerce       | 32,951 | Product         |
-| Orders                    | E-Commerce       | 99,441 | Order           |
-| Order Items               | E-Commerce       | 112,650 | Order + Item    |
-| Payments                  | E-Commerce       | 103,886 | Order + Payment |
-| Reviews                   | E-Commerce       | 99,224 | Review          |
-| Geolocation               | E-Commerce       |1,000,163 | ZIP + Location  |
-| Marketing Qualified Leads | Marketing Funnel |  8,000 | Lead            |
-| Closed Deals              | Marketing Funnel |   842 | Closed Lead     |
-
----
-
-## 4. Data Architecture
-
-The project uses an ELT approach. Source files are loaded into MySQL first, with transformations performed afterward using SQL.
+## 5. Project steps
 
 ```text
-Raw CSV Files
-      ↓
-Python Source Validation
-      ↓
-MySQL Raw Layer
-      ↓
-Raw Profiling
-      ↓
-Raw Validation
-      ↓
-Staging Layer
-      ↓
-SQL Cleaning
-      ↓
-Business Analysis
-      ↓
-Excel Reporting
+CSV files
+   ↓
+Python file checks
+   ↓
+MySQL raw tables
+   ↓
+SQL data checks
+   ↓
+Staging and cleaning
+   ↓
+Business queries
+   ↓
+Excel summary and presentation
 ```
 
-### Data Layers
+The raw tables keep the source values as loaded. Staging tables are used to standardise fields for analysis without changing the raw tables. The business queries count leads and deals, compare deals with seller records, and summarise marketplace activity.
 
-| Layer                      | Purpose                                  |
-| -------------------------- | ---------------------------------------- |
-| `raw_*`                    | Preserve source data as loaded           |
-| `meta_expected_row_counts` | Reconcile source and database row counts |
-| `stg_*`                    | Clean and standardize data               |
-| Analytical SQL             | Develop KPIs and business insights       |
+## 6. Main results
 
-Raw tables remain unchanged after loading.
+| Measure | Result | Meaning |
+| --- | ---: | --- |
+| Marketing-qualified leads | 8,000 | Leads in the marketing file |
+| Closed deals | 842 | Deals recorded as closed |
+| Closed-deal-to-lead ratio | 10.53% | 842 divided by 8,000 |
+| Closed deals without a transaction match | 462 | Closed deals for which no seller match was found |
+| Share without a transaction match | 54.87% | 462 divided by 842 |
+| Source tables | 11 | Tables included in the source inventory |
+| Approximate total source rows | 1,559,764 | Sum of rows across the source files |
+| Geolocation rows | 1,000,163 | Rows in the geolocation file |
 
----
+- The 10.53% figure is a simple ratio. Before calling it a formal conversion rate, confirm that the lead and deal records use the intended join and time period.
 
-## 5. Notebook and SQL Responsibilities
+- The 462 unmatched deals are the main follow-up item. Possible reasons include activation timing, seller ID mapping, the period covered by transaction data, or another data issue. The count alone does not tell us which reason applies.
 
-The project uses one Python notebook and SQL for the remaining workflow.
+## 7. Data checks and findings
 
-### Python
+The project checks for missing or blank values, required IDs, duplicate IDs, links between tables, source-to-database row counts, and loading warnings.
 
-`01_Raw_Data_Ingestion.ipynb`
+The recorded validation run reported:
 
-Responsible for:
+- No required-key failures
+- No referential-integrity failures
+- No source row-count mismatches
+- 814 repeated review IDs
+- 13 product categories without a matching English translation
 
-- File existence and readability
-- Encoding validation
-- Delimiter validation
-- Header and schema validation
-- Logical row-count validation
-- Ingestion summary generation
+The repeated review IDs and missing translations should be reviewed in context rather than automatically deleted or treated as fatal errors.
 
-Python stops after source validation.
+### Review-file loading fix
 
-### SQL
+The review CSV contains 99,224 rows. An earlier MySQL load brought in one fewer row because of how backslashes and quotes were interpreted. The load settings were changed, and the row count was checked again. The expected count was then reached.
 
-| Script                         | Purpose                               |
-| ------------------------------ | ------------------------------------- |
-| `00_Database_Setup.sql`        | Database setup and environment checks |
-| `01_Create_Raw_Tables.sql`     | Raw table creation                    |
-| `02_Load_Raw_Data.sql`         | Raw CSV loading                       |
-| `03_Raw_Data_Profiling.sql`    | Raw data profiling                    |
-| `04_Raw_Data_Validation.sql`   | Data-quality and integrity validation |
-| `05_Create_Staging_Tables.sql` | Staging table creation                |
+### Geolocation file
 
-SQL becomes the analytical source of truth after ingestion.
+The geolocation file contains 1,000,163 rows and may take longer to load or transform than the other files. If a client times out, check whether the query is still running and whether rows have already been loaded before trying again.
 
----
+## 8. KPI definitions
 
-## 6. Raw Layer
+- **Lead-to-deal ratio:** closed deals divided by marketing-qualified leads.
+- **Transaction-match rate:** closed deals with a seller match divided by all closed deals.
+- **Unmatched-deal share:** closed deals without a seller match divided by all closed deals.
+- **Item GMV:** total item prices for the included orders. Freight is excluded; this is not profit.
+- **Average order value:** item GMV divided by distinct orders, unless the report clearly states another definition.
 
-Raw tables preserve source values without cleaning or transformation.
+Use the same filters and date range when comparing months.
 
-The raw layer intentionally uses source-faithful structures and does not apply business rules, type conversions, deduplication, or standardization.
+## 9. Suggested next steps
 
-### Idempotent Loading
+1. Make a list of the 462 unmatched deals and review each one.
+2. Check seller IDs, deal dates, seller records, and first transaction dates.
+3. Assign a reason where possible, such as “activation pending,” “ID needs checking,” “no order in period,” or “unresolved.”
+4. Agree on an activation rule, such as a valid order within 30, 60, or 90 days of deal closure.
+5. Compare activation by deal month so recent deals are not judged using the same time window as older deals.
+6. Keep the data checks as part of each new load.
 
-`02_Load_Raw_Data.sql` uses:
+These are suggested actions, not guaranteed results.
 
-```text
-TRUNCATE → LOAD DATA → Warning Check
-```
+## 10. Limits of the analysis
 
-This allows the raw layer to be safely reloaded without accumulating duplicate rows.
+- The files describe historical Olist activity, not current marketplace performance.
+- A missing seller match does not explain why that seller is missing.
+- The simple lead-to-deal ratio may not account for timing differences between leads and deals.
+- Item GMV is not profit. Profit analysis would need costs, commissions, refunds, and other relevant data.
+- A relationship between delivery measures and review scores does not prove that one caused the other.
 
----
+## 11. How to rerun the project
 
-## 7. Order Reviews Load Issue
+1. Run `Notebooks/01_Raw_Data_Ingestion.ipynb`.
+2. Run the SQL files in numeric order, starting with database setup and raw table creation.
+3. Check the file paths in the loading script.
+4. Run the validation and data-quality scripts.
+5. Run the business analysis queries.
+6. Update the Excel workbook and presentation using the new query results.
 
-`order_reviews` initially loaded with 99,223 rows instead of 99,224.
-
-### Root Cause
-
-The source contains a literal trailing backslash before a closing quote. MySQL's default backslash escaping caused the CSV parser to interpret the quote incorrectly.
-
-### Resolution
-
-The `order_reviews` load uses:
-
-```sql
-ESCAPED BY ''
-```
-
-This disables backslash escaping and preserves the source value correctly.
-
-### Verification
-
-After the fix:
-
-- Rows loaded: 99,224
-- Load warnings: 0
-- Review content preserved
-
-This fix avoids unnecessary Python preprocessing of the raw file.
-
----
-
-## 8. Raw Data Profiling
-
-`03_Raw_Data_Profiling.sql` describes the loaded data without modifying it.
-
-The profiling covers:
-
-- Row counts
-- NULL and blank values
-- Distinct values
-- Business-key distributions
-- Numeric field summaries
-- Date-value boundaries
-- Data patterns requiring further investigation
-
-### Key Findings
-
-- `order_approved_at`: 160 blank values
-- `order_delivered_carrier_date`: 1,783 blank values
-- `order_delivered_customer_date`: 2,965 blank values
-- `review_comment_title`: 87,658 blank values
-- `review_comment_message`: 58,256 blank values
-- `product_category_name`: 610 blank values
-- `order_items.price`: R$0.85–R$6,735.00
-- Average review score: approximately 4.09 / 5
-
-These findings are treated as profiling observations rather than automatic data-quality failures.
-
----
-
-## 9. Raw Data Validation
-
-`04_Raw_Data_Validation.sql` validates whether the raw layer is suitable for downstream analysis.
-
-### Validation Areas
-
-1. Required keys
-2. Duplicate business keys
-3. Referential integrity
-4. Marketing funnel coverage
-5. Source-to-database row counts
-6. Review content integrity
-7. Overall validation status
-
-### Current Results
-
-| Check                                 | Result |
-| ------------------------------------- | ------ |
-| Required-key failures                 | 0      |
-| Referential-integrity failures        | 0      |
-| Row-count mismatches                  | 0      |
-| Review content failures               | 0      |
-| Duplicate review IDs                  | 814    |
-| Missing product-category translations | 13     |
-| Closed deals without matching sellers | 462    |
-
-The duplicate review IDs and unmatched business relationships are documented findings, not raw-load failures.
-
----
-
- ## 10. Important Business Finding
-
-462 of 842 closed deals do not have a matching seller in the transactional seller dataset.
-
-This means approximately 45% of closed deals are currently joinable to marketplace seller activity.
-
-This is important for the main business question because acquisition-to-revenue analysis cannot assume that every closed marketing deal became an active transactional seller.
-
----
-
- ## 11. Staging Layer
-
-`05_Create_Staging_Tables.sql` currently creates empty staging structures using:
-
-```sql
-CREATE TABLE stg_* LIKE raw_*;
-```
-
-No cleaning is performed in the raw layer.
-
-The next staging phase will:
-
-- Load raw data into staging
-- Standardize data types
-- Clean values
-- Resolve duplicate reviews
-- Apply domain validation
-- Validate the cleaned data
-
----
-
- ## 12. Project Status
-
-### Implemented
-
-- Source-file validation
-- MySQL database setup
-- Raw table creation
-- Idempotent raw loading
-- Raw profiling
-- Raw validation
-- Staging table structures
-- Git hygiene
-
-### Planned
-
-- Staging data load
-- Data cleaning and standardization
-- Post-cleaning validation
-- Analytical SQL
-- KPI development
-- Excel dashboard
-- Business insights
-- Executive presentation
-
----
-
- ## 13. Limitations
-
-- Acquisition-to-revenue analysis is limited by the 462 closed deals without matching transactional sellers.
-- Some geolocation records require further validation.
-- Raw validation performance can be improved with appropriate non-unique indexes.
-- `LOAD DATA LOCAL INFILE` paths depend on the SQL client's working directory.
-- Source row-count references must be regenerated when source files change.
-
----
-
- ## 14. Expected Business Outcome
-
-The final analysis will evaluate the seller journey from acquisition through marketplace performance and identify:
-
-- Effective acquisition channels
-- High-value sellers
-- Underperforming sellers
-- Revenue opportunities
-- Operational issues
-- Delivery and customer-experience relationships
-
-The final deliverable will translate these findings into clear, actionable business recommendations.
-
----
-
- ## 15. Technology
-
-| Technology       | Role                                               |
-| ---------------- | -------------------------------------------------- |
-| MySQL 8.0        | Database and primary analytical platform           |
-| SQL              | Profiling, validation, transformation and analysis |
-| Python / Pandas  | Source-file validation                             |
-| Jupyter Notebook | Ingestion workflow                                 |
-| Excel            | Business reporting                                 |
-| Git / GitHub     | Version control                                    |
+See `README.md` for the folder structure and setup overview.
